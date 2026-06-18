@@ -44,6 +44,7 @@ def compute_scores(
     edu = np.array([m["education"] for m in meta], dtype=np.float32)
     behavior = np.array([m["behavior"] for m in meta], dtype=np.float32)
     consulting = np.array([m["consulting"] for m in meta], dtype=np.float32)
+    title_climber = np.array([m.get("title_climber", 1.0) for m in meta], dtype=np.float32)
     plausibility = np.array([m["plausibility"] for m in meta], dtype=np.float32)
 
     # normalize semantic sim to 0..1 (cosine of normalized vectors is in [-1,1],
@@ -59,7 +60,7 @@ def compute_scores(
         WEIGHTS["education"] * edu
     )
 
-    final = fit * behavior * consulting * plausibility
+    final = fit * behavior * consulting * title_climber * plausibility
     return final
 
 

@@ -61,6 +61,7 @@ def build(candidates_path, batch_size=512):
             "location": F.location_score(c),
             "education": F.education_score(c),
             "consulting": F.consulting_only_penalty(c),
+            "title_climber": F.title_climber_penalty(c),
             "behavior": F.behavior_multiplier(c),
             "plausibility": F.implausibility_penalty(c),
             # keep a few raw fields for building the reasoning string later

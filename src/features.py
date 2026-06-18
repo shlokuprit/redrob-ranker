@@ -200,6 +200,74 @@ def consulting_only_penalty(c: Dict) -> float:
 
 
 # ---------------------------------------------------------------------------
+# Title-chaser detection (soft)
+# ---------------------------------------------------------------------------
+# The JD names a specific disqualifier: someone "optimizing for Senior -> Staff
+# -> Principal titles by switching companies every 1.5 years." The key is that
+# it's CLIMBING + HOPPING together, not short tenure alone. A lateral mover
+# (ML -> Search -> NLP, all same level) is NOT a title-chaser and is often a
+# *strength* for a retrieval role. So we detect the actual pattern: short average
+# tenure AND a genuinely ascending seniority ladder. We verified against the real
+# top-100 that this spares lateral movers and erratic histories, firing only on a
+# true climb. Penalty is SOFT (0.93x) because title-climbing is an inference, not
+# a certainty like an impossible profile — we calibrate penalty to confidence.
+
+# Seniority tiers, low -> high. We take the highest tier word present in a title.
+_SENIORITY_TIERS = [
+    (["intern", "trainee"], 0),
+    (["junior", "jr", "associate"], 1),
+    (["senior", "sr"], 3),
+    (["lead", "staff"], 4),
+    (["principal", "head", "director", "vp", "chief"], 5),
+]
+
+
+def _seniority_rank(title: str) -> int:
+    """Map a title to a seniority level. Base individual-contributor = 2; modifiers
+    push it up or down. Returns the HIGHEST tier word found in the title."""
+    t = _lc(title)
+    best = 2  # default: a plain "Engineer"/"Scientist" with no seniority word
+    for words, rank in _SENIORITY_TIERS:
+        if any(w in t for w in words):
+            best = max(best, rank)
+    return best
+
+
+def title_climber_penalty(c: Dict) -> float:
+    """Returns a multiplier <=1. 1.0 = not a title-chaser. 0.93 = matches the JD's
+    climb-while-hopping pattern.
+
+    Both conditions must hold:
+      1. 3+ jobs with short average tenure (< 18 months) -> frequent switching
+      2. seniority trends genuinely UPWARD across those jobs (ends higher than it
+         started, and more upward steps than downward) -> a real climb, not bounce
+    """
+    history = c.get("career_history", [])
+    durations = [r.get("duration_months", 0) or 0 for r in history
+                 if r.get("duration_months")]
+    if len(durations) < 3:
+        return 1.0
+    if sum(durations) / len(durations) >= 18:
+        return 1.0   # not a frequent switcher
+
+    # build seniority sequence oldest -> newest
+    ranks = [_seniority_rank(r.get("title", ""))
+             for r in reversed(history) if r.get("title")]
+    if len(ranks) < 3:
+        return 1.0
+    ups = sum(1 for a, b in zip(ranks, ranks[1:]) if b > a)
+    downs = sum(1 for a, b in zip(ranks, ranks[1:]) if b < a)
+    net_climb = ranks[-1] - ranks[0]
+
+    # A genuine title-chaser shows a SUSTAINED climb: multiple upward steps across
+    # the hops (Junior->Senior->Lead->Principal), not a single early promotion
+    # (Junior->Senior then steady), which is healthy growth. Requiring >=2 upward
+    # steps is what separates the JD's disqualifying pattern from normal progress.
+    is_climber = net_climb >= 2 and ups >= 2 and ups > downs
+    return 0.93 if is_climber else 1.0
+
+
+# ---------------------------------------------------------------------------
 # Behavioral multiplier
 # ---------------------------------------------------------------------------
 def behavior_multiplier(c: Dict) -> float:
