@@ -1,0 +1,14 @@
+# Core ranking stack. Pinned for reproducibility (Stage 3 re-runs your code).
+# All CPU-only; no GPU packages. No hosted-LLM SDKs.
+numpy==1.26.4
+sentence-transformers==2.7.0
+torch==2.2.2           # CPU build; pulled in by sentence-transformers
+scikit-learn==1.4.2    # used in eval harness (NDCG/MAP) only, not at rank time
+tqdm==4.66.4
+
+# Notes:
+# - torch is the heaviest dep. On the sandbox, install the CPU wheel:
+#     pip install torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
+# - The ranking step itself only needs numpy at runtime (embeddings are
+#   precomputed). sentence-transformers/torch are needed to (a) precompute and
+#   (b) embed the single JD string at rank time.

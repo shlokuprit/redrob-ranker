@@ -1,0 +1,8 @@
+{
+  "_comment": "Hand-labeled relevance tiers for LOCAL evaluation (src/evaluate.py). Read ~30-50 of your top-ranked candidates by hand and tag each: 3=excellent fit, 2=good, 1=marginal, 0=no-fit/honeypot. Copy this to data/my_labels.json and replace with real IDs+tiers. Delete the _comment key.",
+  "CAND_0000799": 3,
+  "CAND_0003477": 1,
+  "CAND_0001021": 2,
+  "CAND_0004824": 1,
+  "CAND_0003582": 0
+}
