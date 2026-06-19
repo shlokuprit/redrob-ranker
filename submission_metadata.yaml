@@ -12,7 +12,7 @@ team_name: "your-team-name-here"  # Used in leaderboard and announcements
 primary_contact:
   name: "Full Name"
   email: "primary@example.com"   # Used for all organizer communication
-  phone: "+91-XXXXXXXXXX"        # Used for top-50 / top-10 outreach
+  phone: "+91-9925832506"        # Used for top-50 / top-10 outreach
 
 team_members:
   - name: "Member 1 Full Name"
