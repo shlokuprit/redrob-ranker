@@ -72,11 +72,13 @@ def rank_top_n(
     """Return [(row_index, candidate_id, score), ...] for the top n, best first.
 
     Tie-break: the spec requires unique ranks and, on equal score, candidate_id
-    ascending. We sort by (-score, candidate_id) to bake that in deterministically.
+    ascending. We round the score in the sort key to the same precision the
+    submission uses (4 dp), so float32 noise below that precision can't defeat the
+    tie-break — genuinely-equal scores then fall through to candidate_id ascending.
     """
     order = sorted(
         range(len(final_scores)),
-        key=lambda i: (-float(final_scores[i]), cand_ids[i]),
+        key=lambda i: (-round(float(final_scores[i]), 4), cand_ids[i]),
     )
     top = order[:n]
     return [(i, cand_ids[i], float(final_scores[i])) for i in top]
